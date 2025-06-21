@@ -1,0 +1,183 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Trampolin-Spiel</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #d0f0ff;
+      font-family: sans-serif;
+    }
+    #gameCanvas {
+      display: block;
+      margin: 0 auto;
+      background: url('background.png');
+      background-size: cover;
+      border: 3px solid #444;
+    }
+    #scoreBoard {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 24px;
+      color: #333;
+    }
+    #startButton, #restartButton {
+      display: block;
+      margin: 10px auto;
+      font-size: 20px;
+      padding: 10px 20px;
+      background: #ffcc00;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    #message {
+      text-align: center;
+      font-size: 28px;
+      color: green;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="600" height="400"></canvas>
+  <div id="scoreBoard">
+    Punkte: <span id="score">0</span> | Zeit: <span id="time">30</span>s | Fehler: <span id="misses">0</span>/3
+  </div>
+  <button id="startButton">Start</button>
+  <button id="restartButton" style="display: none;">Nochmal spielen</button>
+  <div id="message"></div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreDisplay = document.getElementById("score");
+    const timeDisplay = document.getElementById("time");
+    const missesDisplay = document.getElementById("misses");
+    const messageDisplay = document.getElementById("message");
+    const startButton = document.getElementById("startButton");
+    const restartButton = document.getElementById("restartButton");
+
+    let playerImg = new Image();
+    playerImg.src = "player.png";
+
+    let ringImg = new Image();
+    ringImg.src = "ring.png";
+
+    let player = { x: 100, y: 300, width: 50, height: 50, vy: 0, jumping: false };
+    let ring = { x: 600, y: 250, width: 60, height: 80 };
+    let score = 0;
+    let misses = 0;
+    let time = 30;
+    let gameInterval;
+    let timerInterval;
+    let gameRunning = false;
+
+    function drawPlayer() {
+      ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+    }
+
+    function drawRing() {
+      ctx.drawImage(ringImg, ring.x, ring.y, ring.width, ring.height);
+    }
+
+    function resetGame() {
+      score = 0;
+      misses = 0;
+      time = 30;
+      player.y = 300;
+      player.vy = 0;
+      player.jumping = false;
+      ring.x = 600;
+      scoreDisplay.textContent = score;
+      missesDisplay.textContent = misses;
+      timeDisplay.textContent = time;
+      messageDisplay.textContent = "";
+      restartButton.style.display = "none";
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (player.jumping) {
+        player.vy += 0.5;
+        player.y += player.vy;
+
+        if (player.y >= 300) {
+          player.y = 300;
+          player.jumping = false;
+          player.vy = 0;
+        }
+      }
+
+      ring.x -= 5;
+      if (ring.x + ring.width < 0) {
+        misses++;
+        missesDisplay.textContent = misses;
+        ring.x = 600;
+        ring.y = 200 + Math.random() * 100;
+        if (misses >= 3) {
+          endGame();
+        }
+      }
+
+      if (
+        player.x + player.width > ring.x &&
+        player.x < ring.x + ring.width &&
+        player.y + player.height > ring.y &&
+        player.y < ring.y + ring.height
+      ) {
+        score++;
+        scoreDisplay.textContent = score;
+        ring.x = 600;
+        ring.y = 200 + Math.random() * 100;
+      }
+
+      drawPlayer();
+      drawRing();
+    }
+
+    function gameLoop() {
+      update();
+    }
+
+    function endGame() {
+      clearInterval(gameInterval);
+      clearInterval(timerInterval);
+      gameRunning = false;
+      messageDisplay.textContent = "Spiel vorbei! Punkte: " + score;
+      restartButton.style.display = "block";
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space" && !player.jumping && gameRunning) {
+        player.vy = -10;
+        player.jumping = true;
+      }
+    });
+
+    startButton.addEventListener("click", () => {
+      resetGame();
+      clearInterval(gameInterval);
+      clearInterval(timerInterval);
+      gameInterval = setInterval(gameLoop, 30);
+      timerInterval = setInterval(() => {
+        time--;
+        timeDisplay.textContent = time;
+        if (time <= 0) {
+          endGame();
+        }
+      }, 1000);
+      gameRunning = true;
+    });
+
+    restartButton.addEventListener("click", () => {
+      startButton.click();
+    });
+  </script>
+</body>
+</html>
