@@ -34,6 +34,20 @@
       border-radius: 10px;
       cursor: pointer;
     }
+    #jumpButton {
+      display: none;
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 22px;
+      padding: 14px 28px;
+      background: #ff8800;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      z-index: 10;
+    }
     #message {
       text-align: center;
       font-size: 28px;
@@ -50,6 +64,7 @@
   </div>
   <button id="startButton">Start</button>
   <button id="restartButton" style="display: none;">Nochmal spielen</button>
+  <button id="jumpButton">SPRINGEN</button>
   <div id="message"></div>
 
   <script>
@@ -61,6 +76,7 @@
     const messageDisplay = document.getElementById("message");
     const startButton = document.getElementById("startButton");
     const restartButton = document.getElementById("restartButton");
+    const jumpButton = document.getElementById("jumpButton");
 
     let playerImg = new Image();
     playerImg.src = "player.png";
@@ -98,6 +114,7 @@
       timeDisplay.textContent = time;
       messageDisplay.textContent = "";
       restartButton.style.display = "none";
+      jumpButton.style.display = "block";
     }
 
     function update() {
@@ -151,14 +168,25 @@
       gameRunning = false;
       messageDisplay.textContent = "Spiel vorbei! Punkte: " + score;
       restartButton.style.display = "block";
+      jumpButton.style.display = "none";
     }
 
-    document.addEventListener("keydown", (e) => {
-      if (e.code === "Space" && !player.jumping && gameRunning) {
+    function triggerJump() {
+      if (!player.jumping && gameRunning) {
         player.vy = -10;
         player.jumping = true;
       }
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space") {
+        triggerJump();
+      }
     });
+
+    jumpButton.addEventListener("click", triggerJump);
+    canvas.addEventListener("click", triggerJump);
+    canvas.addEventListener("touchstart", triggerJump);
 
     startButton.addEventListener("click", () => {
       resetGame();
